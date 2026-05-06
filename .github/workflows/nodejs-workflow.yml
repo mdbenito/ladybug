@@ -84,6 +84,12 @@ jobs:
         if: ${{ matrix.platform == 'linux' }}
         run: git config --global --add safe.directory '*'
 
+      - name: Set precompiled lib path (Linux container)
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          echo "LBUG_NODEJS_PRECOMPILED_DIR=${GITHUB_WORKSPACE}/precompiled-liblbug" >> "$GITHUB_ENV"
+          echo "LBUG_NODEJS_PRECOMPILED_LIB_PATH=${GITHUB_WORKSPACE}/precompiled-liblbug/liblbug.a" >> "$GITHUB_ENV"
+
       - name: Update submodules
         run: git submodule update --init --recursive tools/nodejs_api dataset
 
@@ -111,8 +117,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LBUG_LIB_KIND: static
           LBUG_PRECOMPILED_RUN_ID: ${{ inputs.precompiledRunId }}
-          LBUG_TARGET_DIR: ${{ env.LBUG_NODEJS_PRECOMPILED_DIR }}
         run: |
+          export LBUG_TARGET_DIR="$LBUG_NODEJS_PRECOMPILED_DIR"
           rm -rf "$LBUG_TARGET_DIR"
           ./scripts/download-liblbug.sh
 
@@ -220,9 +226,9 @@ jobs:
         env:
           CMAKE_C_COMPILER_LAUNCHER: ccache
           CMAKE_CXX_COMPILER_LAUNCHER: ccache
-          EXTRA_CMAKE_FLAGS: -DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${{ env.LBUG_NODEJS_PRECOMPILED_LIB_PATH }}
           LDFLAGS: ${{ matrix.platform == 'linux' && '-static-libstdc++' || '' }}
         run: |
+          export EXTRA_CMAKE_FLAGS="-DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${LBUG_NODEJS_PRECOMPILED_LIB_PATH}"
           ccache -s
           make GEN=Ninja nodejs
           ccache -s

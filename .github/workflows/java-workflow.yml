@@ -40,13 +40,16 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     env:
       LBUG_LINUX_VARIANT: compat
-      LBUG_JAVA_PRECOMPILED_DIR: ${{ github.workspace }}/precompiled-liblbug
-      LBUG_JAVA_PRECOMPILED_LIB_PATH: ${{ github.workspace }}/precompiled-liblbug/liblbug.a
     steps:
       - uses: actions/checkout@v4
 
       - name: Mark workspace safe for git
         run: git config --global --add safe.directory '*'
+
+      - name: Set precompiled lib path
+        run: |
+          echo "LBUG_JAVA_PRECOMPILED_DIR=${GITHUB_WORKSPACE}/precompiled-liblbug" >> "$GITHUB_ENV"
+          echo "LBUG_JAVA_PRECOMPILED_LIB_PATH=${GITHUB_WORKSPACE}/precompiled-liblbug/liblbug.a" >> "$GITHUB_ENV"
 
       - name: Update submodules
         run: git submodule update --init --recursive tools/java_api
@@ -57,8 +60,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LBUG_LIB_KIND: static
           LBUG_PRECOMPILED_RUN_ID: ${{ inputs.precompiledRunId }}
-          LBUG_TARGET_DIR: ${{ env.LBUG_JAVA_PRECOMPILED_DIR }}
         run: |
+          export LBUG_TARGET_DIR="$LBUG_JAVA_PRECOMPILED_DIR"
           rm -rf "$LBUG_TARGET_DIR"
           ./scripts/download-liblbug.sh
 
@@ -78,8 +81,8 @@ jobs:
           CC: gcc-13
           CXX: g++-13
           LDFLAGS: "-static-libstdc++"
-          EXTRA_CMAKE_FLAGS: -DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${{ env.LBUG_JAVA_PRECOMPILED_LIB_PATH }}
         run: |
+          export EXTRA_CMAKE_FLAGS="-DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${LBUG_JAVA_PRECOMPILED_LIB_PATH}"
           make GEN=Ninja java
 
       - uses: actions/upload-artifact@v4
@@ -99,13 +102,16 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     env:
       LBUG_LINUX_VARIANT: compat
-      LBUG_JAVA_PRECOMPILED_DIR: ${{ github.workspace }}/precompiled-liblbug
-      LBUG_JAVA_PRECOMPILED_LIB_PATH: ${{ github.workspace }}/precompiled-liblbug/liblbug.a
     steps:
       - uses: actions/checkout@v4
 
       - name: Mark workspace safe for git
         run: git config --global --add safe.directory '*'
+
+      - name: Set precompiled lib path
+        run: |
+          echo "LBUG_JAVA_PRECOMPILED_DIR=${GITHUB_WORKSPACE}/precompiled-liblbug" >> "$GITHUB_ENV"
+          echo "LBUG_JAVA_PRECOMPILED_LIB_PATH=${GITHUB_WORKSPACE}/precompiled-liblbug/liblbug.a" >> "$GITHUB_ENV"
 
       - name: Update submodules
         run: git submodule update --init --recursive tools/java_api
@@ -116,8 +122,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LBUG_LIB_KIND: static
           LBUG_PRECOMPILED_RUN_ID: ${{ inputs.precompiledRunId }}
-          LBUG_TARGET_DIR: ${{ env.LBUG_JAVA_PRECOMPILED_DIR }}
         run: |
+          export LBUG_TARGET_DIR="$LBUG_JAVA_PRECOMPILED_DIR"
           rm -rf "$LBUG_TARGET_DIR"
           ./scripts/download-liblbug.sh
 
@@ -137,8 +143,9 @@ jobs:
           CC: gcc-13
           CXX: g++-13
           LDFLAGS: "-static-libstdc++"
-          EXTRA_CMAKE_FLAGS: -DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${{ env.LBUG_JAVA_PRECOMPILED_LIB_PATH }}
-        run: make GEN=Ninja java
+        run: |
+          export EXTRA_CMAKE_FLAGS="-DBUILD_LBUG=FALSE -DBUILD_SHELL=FALSE -DLBUG_API_USE_PRECOMPILED_LIB=TRUE -DLBUG_API_PRECOMPILED_LIB_PATH=${LBUG_JAVA_PRECOMPILED_LIB_PATH}"
+          make GEN=Ninja java
 
       - uses: actions/upload-artifact@v4
         with:
